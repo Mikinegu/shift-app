@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
-import { GraduationCap, Building2, ArrowRight, ArrowLeft, Loader2, Upload, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Loader2, Upload, CheckCircle2 } from "lucide-react";
 
 const YEARS = ["1st year", "2nd year", "3rd year", "4th year", "Other", "Graduated"];
 const EMP_TYPES = ["Part-time", "Full-time", "Internship"];
@@ -86,7 +86,11 @@ export default function Onboarding() {
   const { user } = useAuth();
   const { role, loading } = useProfile();
   const navigate = useNavigate();
-  const [step, setStep] = useState("role");
+  // Derive the initial step from user.role so the picker is never shown
+  const [step, setStep] = useState(() => {
+    if (user?.role === "company") return "company";
+    return "student"; // default for student role (and any unknown)
+  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -180,36 +184,12 @@ export default function Onboarding() {
           <span className="text-sm text-muted-foreground">Welcome to Shift</span>
         </div>
 
-        {step === "role" && (
-          <div className="bg-white rounded-3xl border border-border p-8 shadow-sm">
-            <h1 className="text-2xl font-bold tracking-tight">Choose your account type</h1>
-            <p className="text-muted-foreground mt-2">You can complete this once. You'll be verified by our admin team before full access.</p>
-            <div className="mt-8 grid sm:grid-cols-2 gap-4">
-              <button onClick={() => setStep("student")} className="text-left p-6 rounded-2xl border-2 border-border hover:border-indigo-500 hover:bg-indigo-50/40 transition-colors group">
-                <span className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                  <GraduationCap className="w-6 h-6" />
-                </span>
-                <h3 className="mt-4 text-lg font-semibold">I'm a Student</h3>
-                <p className="mt-1 text-sm text-muted-foreground">Find jobs and internships that match your studies.</p>
-              </button>
-              <button onClick={() => setStep("company")} className="text-left p-6 rounded-2xl border-2 border-border hover:border-violet-500 hover:bg-violet-50/40 transition-colors group">
-                <span className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-violet-100 text-violet-600 group-hover:bg-violet-600 group-hover:text-white transition-colors">
-                  <Building2 className="w-6 h-6" />
-                </span>
-                <h3 className="mt-4 text-lg font-semibold">I'm a Company</h3>
-                <p className="mt-1 text-sm text-muted-foreground">Hire verified students and post opportunities.</p>
-              </button>
-            </div>
-          </div>
-        )}
-
         {step === "student" && (
           <div className="bg-white rounded-3xl border border-border p-8 shadow-sm">
-            <div className="flex items-center gap-3 mb-6">
-              <button onClick={() => setStep("role")} className="p-2 rounded-lg hover:bg-slate-100"><ArrowLeft className="w-5 h-5" /></button>
+            <div className="mb-6">
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">Student profile</h1>
-                <p className="text-sm text-muted-foreground">Tell us about your studies so we can verify and match you.</p>
+                <h1 className="text-2xl font-bold tracking-tight">Complete your student profile</h1>
+                <p className="text-sm text-muted-foreground mt-1">Tell us about your studies so we can verify and match you.</p>
               </div>
             </div>
             {error && <div className="mb-4 p-3 rounded-lg bg-rose-50 text-rose-700 text-sm border border-rose-100">{error}</div>}
@@ -263,11 +243,10 @@ export default function Onboarding() {
 
         {step === "company" && (
           <div className="bg-white rounded-3xl border border-border p-8 shadow-sm">
-            <div className="flex items-center gap-3 mb-6">
-              <button onClick={() => setStep("role")} className="p-2 rounded-lg hover:bg-slate-100"><ArrowLeft className="w-5 h-5" /></button>
+            <div className="mb-6">
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">Company profile</h1>
-                <p className="text-sm text-muted-foreground">Tell us about your organization so we can verify you.</p>
+                <h1 className="text-2xl font-bold tracking-tight">Complete your company profile</h1>
+                <p className="text-sm text-muted-foreground mt-1">Tell us about your organization so we can verify you.</p>
               </div>
             </div>
             {error && <div className="mb-4 p-3 rounded-lg bg-rose-50 text-rose-700 text-sm border border-rose-100">{error}</div>}
