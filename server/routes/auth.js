@@ -16,13 +16,18 @@ function generateOtp() {
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, role: requestedRole } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
+  // Only 'student' and 'company' are valid self-registration roles.
+  // 'admin' accounts can only be created via the seed script.
+  const ALLOWED_ROLES = ['student', 'company'];
+  const role = ALLOWED_ROLES.includes(requestedRole) ? requestedRole : 'student';
+
   try {
-    const existing = await query('SELECT * FROM users WHERE email = $1', [email.toLowerCase().trim()]);
+    const existing = await query('SELECT id FROM users WHERE email = $1', [email.toLowerCase().trim()]);
     if (existing.rows.length > 0) {
       return res.status(400).json({ error: 'An account with this email already exists' });
     }
@@ -32,8 +37,6 @@ router.post('/register', async (req, res) => {
     const id = generateId();
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
-
-    const role = email.toLowerCase().includes('admin') ? 'admin' : 'student';
 
     await query(
       `INSERT INTO users (id, email, password_hash, role, otp_code, otp_expires_at, is_verified) 
@@ -64,7 +67,7 @@ router.post('/verify-otp', async (req, res) => {
 
   try {
     const result = await query(
-      'SELECT * FROM users WHERE email = $1 AND otp_code = $2',
+      'SELECT * FROM users WHERE email = $1 AND otp_code = $2 AND otp_expires_at > NOW()',
       [email.toLowerCase().trim(), otpCode.trim()]
     );
 
